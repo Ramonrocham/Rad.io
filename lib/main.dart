@@ -4,6 +4,8 @@ import 'SpecificSearchScreen.dart';
 
 import 'player_screen.dart';
 
+import 'package:just_audio/just_audio.dart';
+
 void main() {
   runApp(const RadioApp());
 }
@@ -34,16 +36,30 @@ class RadioApp extends StatelessWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
 
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
+  List<dynamic> currentRadiosList = []; 
+  int currentRadioIndex = -1;
+
   Map<String, dynamic>? currentRadio; 
   String? currentCategoryTitle;
 
+
   // Função para dar o "play" e exibir o player
-  void playRadio(Map<String, dynamic> radio, String categoryTitle) {
+  void playRadio (List<dynamic> radios, int index, String categoryTitle) async{
     setState(() {
-      currentRadio = radio;
+      currentRadiosList = radios;
+      currentRadioIndex = index;
+      currentRadio = radios[index];
       currentCategoryTitle = categoryTitle;
     });
 
+    try {
+      await _audioPlayer.setUrl(currentRadio!['url_resolved'] ?? currentRadio!['url']);
+      _audioPlayer.play();
+    } catch (e) {
+      print('Erro ao tocar a rádio: $e');
+    }
   }
 
   @override
@@ -99,11 +115,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     const SizedBox(height: 40),
                     _buildSectionTitle('Recomendados'),
-                    _buildRadioGrid(),
+                    _buildRadioGrid([], 'Recomendados'), // Você precisará passar a lista de rádios recomendados aqui
 
                     const SizedBox(height: 30),
                     _buildSectionTitle('Descubra mais'),
-                    _buildRadioGrid(),
+                    _buildRadioGrid([], 'Descubra mais'),
                   ],
                 ),
               ),
@@ -144,10 +160,10 @@ class _HomeScreenState extends State<HomeScreen> {
             title: title,
             endpoint: endpoint ?? '',
             isLocal: isLocal,
-            // Correção UX: Atualiza a rádio e volta para a Home para mostrar o player
-            onRadioTap: (radio) {
-              playRadio(radio, title); // Chama a função que dá o setState
-              Navigator.pop(context); // Fecha a tela de busca
+            // CORREÇÃO AQUI: Adicione (list, index) para bater com a nova assinatura
+            onRadioTap: (list, index) { 
+              playRadio(list, index, title); // Agora passa os 3 parâmetros
+              Navigator.pop(context); 
             },
           ),
         ),
@@ -191,41 +207,46 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // Grid das rádios (Recomendados / Descubra)
-  Widget _buildRadioGrid() {
-  return GridView.builder(
-    shrinkWrap: true,
-    physics: const NeverScrollableScrollPhysics(),
-    itemCount: 6,
-    // ADICIONE ESTA PARTE ABAIXO:
-    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-      crossAxisCount: 3,       // Número de colunas
-      crossAxisSpacing: 12,    // Espaço horizontal
-      mainAxisSpacing: 20,     // Espaço vertical
-      childAspectRatio: 0.7,   // Proporção largura/altura dos cards
-    ),
-    itemBuilder: (context, index) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFF5D4E2E), 
-                borderRadius: BorderRadius.circular(4),
+  Widget _buildRadioGrid(List<dynamic> radios, String sectionTitle) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: radios.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 20,
+        childAspectRatio: 0.7,
+      ),
+      itemBuilder: (context, index) {
+        final radio = radios[index];
+        return GestureDetector(
+          onTap: () => playRadio(radios, index, sectionTitle), // Passa a lista e o index
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF5D4E2E),
+                    borderRadius: BorderRadius.circular(4),
+                    image: radio['favicon'] != "" 
+                      ? DecorationImage(image: NetworkImage(radio['favicon']), fit: BoxFit.cover)
+                      : null,
+                  ),
+                ),
               ),
-            ),
+              const SizedBox(height: 8),
+              Text(
+                radio['name'] ?? 'Rádio',
+                maxLines: 2,
+                style: const TextStyle(fontSize: 11, color: Colors.white70),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
-          const Text(
-            'Nome da radio - Estado, Pais.',
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis, // Evita que o texto quebre o layout
-            style: TextStyle(fontSize: 11, color: Colors.white70),
-          ),
-        ],
-      );
-    },
-  );
+        );
+      },
+    );
   }
 
   // Barra do Player
@@ -237,6 +258,8 @@ class _HomeScreenState extends State<HomeScreen> {
     key: UniqueKey(), // Chave única para o widget ser destruído e recriado
     direction: DismissDirection.horizontal, // Permite arrastar para os lados
     onDismissed: (direction) {
+      _audioPlayer.stop();
+
       setState(() {
         currentRadio = null; // Para de tocar e "some" com o player
       });
@@ -247,7 +270,21 @@ class _HomeScreenState extends State<HomeScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => PlayerScreen(radio: currentRadio!, categoryTitle: currentCategoryTitle ?? "RÁDIO"),
+            builder: (context) => PlayerScreen(
+              radio: currentRadio!,
+              categoryTitle: currentCategoryTitle ?? "Rádio",
+              player: _audioPlayer,
+              onNext: () {
+                // Lógica de loop para a próxima rádio
+                int nextIndex = (currentRadioIndex + 1) % currentRadiosList.length;
+                playRadio(currentRadiosList, nextIndex, currentCategoryTitle!);
+              },
+              onPrevious: () {
+                // Lógica de loop para a rádio anterior
+                int prevIndex = (currentRadioIndex - 1 + currentRadiosList.length) % currentRadiosList.length;
+                playRadio(currentRadiosList, prevIndex, currentCategoryTitle!);
+              },
+            ),
           ),
         );
       },
