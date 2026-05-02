@@ -78,7 +78,7 @@ class SpecificSearchScreen extends StatelessWidget {
             onPressed: () => Navigator.pop(context),
           ),
           Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          Image.asset('assets/images/logo.png', height: 35),
+          Image.asset('assets/images/logo.png', height: 28),
         ],
       ),
     );
@@ -107,7 +107,7 @@ class SpecificSearchScreen extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            radio['name'] ?? 'Rádio Sem Nome',
+            radio['name'].trim() ?? 'Rádio Sem Nome',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
@@ -118,7 +118,7 @@ class SpecificSearchScreen extends StatelessWidget {
             children: [
               Text(
                 (radio['state'] != null && radio['state'] != "") 
-                    ? "${radio['state']} , ${radio['countrycode']}" 
+                    ? "${radio['state']}, ${radio['countrycode']}" 
                     : "${radio['countrycode'] ?? ''}",
                 maxLines: 1,
                 style: const TextStyle(fontSize: 10, color: Colors.white70),
