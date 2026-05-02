@@ -98,10 +98,21 @@ class SpecificSearchScreen extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
         ),
-        Text(
-          '${radio['state'] ?? ''} ${radio['countrycode'] ?? ''}',
-          maxLines: 1,
-          style: const TextStyle(fontSize: 10, color: Colors.white70),
+        Wrap(
+          crossAxisAlignment: WrapCrossAlignment.center, // Alinha verticalmente os itens
+          spacing: 5,
+          children: [
+            Text(
+              '${radio['state'] ?? ''} ${radio['countrycode'] ?? ''}',
+              maxLines: 1,
+              style: const TextStyle(fontSize: 10, color: Colors.white70),
+            ),
+            Image.asset(
+              'icons/flags/png/${radio['countrycode'].toLowerCase()}.png',
+              package: 'country_icons',
+              height: 10,
+            )
+          ],
         ),
       ],
     );
