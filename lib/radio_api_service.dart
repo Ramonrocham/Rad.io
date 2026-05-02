@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'log_service.dart' as Log;
 
 class RadioApiService {
   // URL base da API
@@ -11,6 +12,11 @@ class RadioApiService {
       final response = await http.get(Uri.parse('$_baseUrl/$endpoint'));
 
       if (response.statusCode == 200) {
+        /*Log.LogService.saveLog('API', '''
+          Endpoint: $endpoint
+          Status: ${response.statusCode}
+          Body: ${const JsonEncoder.withIndent('  ').convert(json.decode(response.body))}
+          '''); // Log parcial para evitar excesso de dados*/
         return json.decode(response.body);
       } else {
         throw Exception('Erro na API: ${response.statusCode}');

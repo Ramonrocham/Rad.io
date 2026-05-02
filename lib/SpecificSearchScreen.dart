@@ -7,7 +7,15 @@ class SpecificSearchScreen extends StatelessWidget {
   final String endpoint;
   final bool isLocal;
 
-  const SpecificSearchScreen({super.key, required this.title, required this.endpoint, this.isLocal = false});
+  final Function(Map<String, dynamic>) onRadioTap;
+
+  const SpecificSearchScreen({
+    super.key, 
+    required this.title, 
+    required this.endpoint, 
+    required this.onRadioTap, // 2. Torne-a obrigatória no construtor
+    this.isLocal = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -77,44 +85,54 @@ class SpecificSearchScreen extends StatelessWidget {
   }
 
   Widget _buildRadioItem(dynamic radio) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFF282828), // Cinza para cards
-              borderRadius: BorderRadius.circular(8),
-              image: radio['favicon'] != ""
-                  ? DecorationImage(image: NetworkImage(radio['favicon']), fit: BoxFit.cover)
-                  : null,
+    return GestureDetector(
+      // 1. Ao clicar no card, chama a função que atualiza a rádio atual
+      onTap: () => onRadioTap(radio), 
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFF282828), // Cinza para cards
+                borderRadius: BorderRadius.circular(8),
+                image: radio['favicon'] != null && radio['favicon'] != ""
+                    ? DecorationImage(
+                        image: NetworkImage(radio['favicon']), 
+                        fit: BoxFit.cover
+                      )
+                    : null,
+              ),
             ),
           ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          radio['name'] ?? 'Rádio Sem Nome',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-        ),
-        Wrap(
-          crossAxisAlignment: WrapCrossAlignment.center, // Alinha verticalmente os itens
-          spacing: 5,
-          children: [
-            Text(
-              '${radio['state'] ?? ''} ${radio['countrycode'] ?? ''}',
-              maxLines: 1,
-              style: const TextStyle(fontSize: 10, color: Colors.white70),
-            ),
-            Image.asset(
-              'icons/flags/png/${radio['countrycode'].toLowerCase()}.png',
-              package: 'country_icons',
-              height: 10,
-            )
-          ],
-        ),
-      ],
+          const SizedBox(height: 8),
+          Text(
+            radio['name'] ?? 'Rádio Sem Nome',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+          ),
+          Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 5,
+            children: [
+              Text(
+                (radio['state'] != null && radio['state'] != "") 
+                    ? "${radio['state']} , ${radio['countrycode']}" 
+                    : "${radio['countrycode'] ?? ''}",
+                maxLines: 1,
+                style: const TextStyle(fontSize: 10, color: Colors.white70),
+              ),
+              if (radio['countrycode'] != null && radio['countrycode'] != "")
+                Image.asset(
+                  'icons/flags/png/${radio['countrycode'].toLowerCase()}.png',
+                  package: 'country_icons',
+                  height: 10,
+                )
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
