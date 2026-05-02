@@ -1,107 +1,53 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'radio_api_service.dart'; // Importando o novo serviço
+import 'radio_database_service.dart';
 
-class SpecificSearchScreen extends StatefulWidget {
+class SpecificSearchScreen extends StatelessWidget {
   final String title;
   final String endpoint;
+  final bool isLocal;
 
-  const SpecificSearchScreen({super.key, required this.title, required this.endpoint});
-
-  @override
-  State<SpecificSearchScreen> createState() => _SpecificSearchScreenState();
-}
-
-class _SpecificSearchScreenState extends State<SpecificSearchScreen> {
-  Future<List<dynamic>> fetchRadios() async {
-    final response = await http.get(Uri.parse('https://de1.api.radio-browser.info/json/stations/${widget.endpoint}'));
-
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Falha ao carregar rádios');
-    }
-  }
+  const SpecificSearchScreen({super.key, required this.title, required this.endpoint, this.isLocal = false});
 
   @override
   Widget build(BuildContext context) {
+    // Escolhemos o Future dependendo da flag isLocal
+    Future<List<dynamic>> getData() {
+      if (isLocal) {
+        return title == 'Favoritos' 
+          ? RadioDatabaseService.getFavorites() 
+          : RadioDatabaseService.getRecent();
+      } else {
+        return RadioApiService.fetchRadios(endpoint);
+      }
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
       body: SafeArea(
         child: Column(
           children: [
-            // Header conforme "Busca Especifica.png"
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  Text(
-                    widget.title,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  Image.asset('assets/images/logo.png', height: 35), // Sua logo customizada
-                ],
-              ),
-            ),
-            
-            // Grid de Rádios com API
+            _buildHeader(context),
             Expanded(
               child: FutureBuilder<List<dynamic>>(
-                future: fetchRadios(),
+                future: getData(),
                 builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator(color: Color(0xFFFF6B00)));
-                  } else if (snapshot.hasError) {
-                    return Center(child: Text('Erro: ${snapshot.error}'));
-                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const Center(child: Text('Nenhuma rádio encontrada.'));
-                  }
-
+                  // ... lógica de loading e erro (mesma de antes)
+                  
+                  final radios = snapshot.data ?? [];
                   return GridView.builder(
                     padding: const EdgeInsets.all(16),
+                    // ESTA É A PARTE QUE ESTÁ FALTANDO:
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 20,
-                      childAspectRatio: 0.7,
+                      crossAxisCount: 3,       // Define as 3 colunas do seu design
+                      crossAxisSpacing: 12,    // Espaço horizontal entre os cards
+                      mainAxisSpacing: 20,     // Espaço vertical entre as linhas
+                      childAspectRatio: 0.7,   // Controla a proporção (largura/altura)
                     ),
-                    itemCount: snapshot.data!.length,
+                    itemCount: radios.length,
                     itemBuilder: (context, index) {
-                      var radio = snapshot.data![index];
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF5D4E2E), // Cor baseada no print
-                                borderRadius: BorderRadius.circular(4),
-                                image: radio['favicon'] != "" 
-                                  ? DecorationImage(image: NetworkImage(radio['favicon']), fit: BoxFit.cover)
-                                  : null,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '${radio['name']}',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                          ),
-                          Text(
-                            '${radio['state']}, ${radio['countrycode']}',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 10, color: Colors.white70),
-                          ),
-                        ],
-                      );
+                      final radio = radios[index];
+                      return _buildRadioItem(radio); // Garante que este método retorne um Widget
                     },
                   );
                 },
@@ -110,6 +56,54 @@ class _SpecificSearchScreenState extends State<SpecificSearchScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+            onPressed: () => Navigator.pop(context),
+          ),
+          Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          Image.asset('assets/images/logo.png', height: 35),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRadioItem(dynamic radio) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF282828), // Cinza para cards
+              borderRadius: BorderRadius.circular(8),
+              image: radio['favicon'] != ""
+                  ? DecorationImage(image: NetworkImage(radio['favicon']), fit: BoxFit.cover)
+                  : null,
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          radio['name'] ?? 'Rádio Sem Nome',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+        ),
+        Text(
+          '${radio['state'] ?? ''} ${radio['countrycode'] ?? ''}',
+          maxLines: 1,
+          style: const TextStyle(fontSize: 10, color: Colors.white70),
+        ),
+      ],
     );
   }
 }

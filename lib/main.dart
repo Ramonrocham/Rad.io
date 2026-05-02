@@ -69,10 +69,10 @@ class HomeScreen extends StatelessWidget {
                       mainAxisSpacing: 10,
                       childAspectRatio: 2.2,
                       children: [
-                        _buildQuickCard(context, 'Mais ouvidas', Icons.local_fire_department, 'topclick/30'),
-                        _buildQuickCard(context, 'Favoritos', Icons.favorite, 'topvote/30'),
-                        _buildQuickCard(context, 'Mais ouvidas Brasil', Icons.local_fire_department, 'bycountry/brazil'),
-                        _buildQuickCard(context, 'Recentes', Icons.refresh, 'lastclick/30'),
+                        _buildQuickCard(context: context, title: 'Mais ouvidas', icon: Icons.local_fire_department, endpoint: 'topclick/30'),
+                        _buildQuickCard(context: context, title: 'Favoritos', icon: Icons.favorite, isLocal: true), // LOCAL
+                        _buildQuickCard(context: context, title: 'Mais ouvidas Brasil', icon: Icons.local_fire_department, endpoint: 'bycountry/brazil'),
+                        _buildQuickCard(context: context, title: 'Recentes', icon: Icons.refresh, isLocal: true), // LOCAL
                       ],
                     ),
 
@@ -107,13 +107,23 @@ class HomeScreen extends StatelessWidget {
   }
 
   // Widget para os cards de acesso rápido no topo
-  Widget _buildQuickCard(BuildContext context, String title, IconData icon, String endpoint) {
+  Widget _buildQuickCard({
+  required BuildContext context,
+  required String title,
+  required IconData icon,
+  String? endpoint, // Opcional para API
+  bool isLocal = false, // Define se busca no DB
+}) {
   return GestureDetector(
     onTap: () {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => SpecificSearchScreen(title: title, endpoint: endpoint),
+          builder: (context) => SpecificSearchScreen(
+            title: title,
+            endpoint: endpoint ?? '',
+            isLocal: isLocal, // Passamos essa flag para a tela
+          ),
         ),
       );
     },
