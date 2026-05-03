@@ -45,7 +45,7 @@ class PlayerScreen extends StatelessWidget {
                       const Spacer(),
                       _buildRadioInfo(radio),
                       const SizedBox(height: 30),
-                      _buildProgressSection(context),
+                      _buildProgressSection(context, radio, isPlaying),
                       const SizedBox(height: 20),
                       _buildPlaybackControls(isPlaying),
                       const SizedBox(height: 60)
@@ -104,7 +104,8 @@ class PlayerScreen extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Expanded(
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -170,60 +171,65 @@ class PlayerScreen extends StatelessWidget {
       children: [
         Text(
           locationText,
-          style: const TextStyle(fontSize: 16, color: Colors.grey),
+          style: const TextStyle(fontSize: 15, color: Colors.grey),
         ),
         const SizedBox(width: 8),
         if (radio['countrycode'] != null && radio['countrycode'] != "")
           Image.asset(
             'icons/flags/png/${radio['countrycode'].toLowerCase()}.png',
             package: 'country_icons',
-            height: 16,
+            height: 13,
           ),
       ],
     );
   }
 
-  Widget _buildProgressSection(BuildContext context) {
+  Widget _buildProgressSection(BuildContext context, Map<String, dynamic> radio, bool isPlaying) {
+    String tagsRaw = radio['tags']?.toString() ?? "";
+
+    List<String> tags = tagsRaw
+        .split(',')
+        .map((t) => t.trim())
+        .where((String t) => t.isNotEmpty) 
+        .take(2)
+        .toList();
+
+    String displayTags = tags.isNotEmpty ? tags.join(" - ") : "Sem gêneros";
+
+    int bitrate = radio['bitrate'] ?? 0;
     return Column(
       children: [
-        SliderTheme(
-          data: SliderTheme.of(context).copyWith(
-            trackHeight: 4,
-            activeTrackColor: const Color(0xFFFF6B00),
-            inactiveTrackColor: Colors.grey[800],
-            thumbColor: Colors.white,
+          Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Container(
+            height: 4, // Altura discreta, estilo Spotify
+            width: double.infinity,
+            decoration: BoxDecoration(
+              // Verde solicitado se estiver tocando, caso contrário, branco
+              color: isPlaying ? const Color(0xFF4ADE80) : Colors.white,
+              boxShadow: isPlaying 
+                ? [BoxShadow(color: const Color(0xFF4ADE80).withOpacity(0.3))]
+                : [],
+            ),
           ),
-          child: Slider(value: 0.3, onChanged: (v) {}),
         ),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20),
+        const SizedBox(height: 12),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 6),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('00:00', style: TextStyle(color: Colors.grey, fontSize: 12)),
-              Text('LIVE', style: TextStyle(color: Color(0xFFFF6B00), fontSize: 12, fontWeight: FontWeight.bold)),
+              Text('bitrate: $bitrate', style: TextStyle(color: Colors.grey, fontSize: 12)),
+              Row(
+                children: [
+                  Text('Tags: ', style: TextStyle(color: Color(0xFFFF6B00), fontSize: 12, fontWeight: FontWeight.bold)),
+                  Text(displayTags, style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.w500))
+                ],
+              ),
             ],
           ),
         ),
       ],
     );
   }
-
-  /*Widget _buildPlaybackControls() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        const Icon(Icons.ios_share_rounded, color: Color(0xFFFF6B00)),
-        const Icon(Icons.skip_previous, size: 40),
-        Container(
-          height: 65,
-          width: 65,
-          decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-          child: const Icon(Icons.play_arrow, color: Colors.black, size: 40),
-        ),
-        const Icon(Icons.skip_next, size: 40),
-        const Icon(Icons.favorite_border, color: Color(0xFFFF6B00)),
-      ],
-    );
-  }*/
 }
