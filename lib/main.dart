@@ -41,7 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<dynamic> currentRadiosList = []; 
   int currentRadioIndex = -1;
 
-  Map<String, dynamic>? currentRadio; 
+  final ValueNotifier<Map<String, dynamic>?> currentRadioNotifier = ValueNotifier(null);
   String? currentCategoryTitle;
 
 
@@ -50,12 +50,12 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       currentRadiosList = radios;
       currentRadioIndex = index;
-      currentRadio = radios[index];
+      currentRadioNotifier.value = radios[index];
       currentCategoryTitle = categoryTitle;
     });
 
     try {
-      await _audioPlayer.setUrl(currentRadio!['url_resolved'] ?? currentRadio!['url']);
+      await _audioPlayer.setUrl(currentRadioNotifier.value!['url_resolved'] ?? currentRadioNotifier.value!['url']);
       _audioPlayer.play();
     } catch (e) {
       print('Erro ao tocar a rádio: $e');
@@ -252,7 +252,9 @@ class _HomeScreenState extends State<HomeScreen> {
   // Barra do Player
   Widget _buildBottomPlayer(BuildContext context) {
   // Se não houver rádio selecionada, retorna um widget vazio
-  if (currentRadio == null) return const SizedBox.shrink();
+  final radio = currentRadioNotifier.value;
+
+  if (radio == null) return const SizedBox.shrink();
 
   return Dismissible(
     key: UniqueKey(), // Chave única para o widget ser destruído e recriado
@@ -261,7 +263,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _audioPlayer.stop();
 
       setState(() {
-        currentRadio = null; // Para de tocar e "some" com o player
+        currentRadioNotifier.value = null; // Para de tocar e "some" com o player
       });
       // Log para debug no seu Linux Mint
     },
@@ -271,7 +273,7 @@ class _HomeScreenState extends State<HomeScreen> {
           context,
           MaterialPageRoute(
             builder: (context) => PlayerScreen(
-              radio: currentRadio!,
+              radioNotifier: currentRadioNotifier,
               categoryTitle: currentCategoryTitle ?? "Rádio",
               player: _audioPlayer,
               onNext: () {
@@ -305,8 +307,8 @@ class _HomeScreenState extends State<HomeScreen> {
               decoration: BoxDecoration(
                 color: const Color(0xFF5D4E2E),
                 borderRadius: BorderRadius.circular(4),
-                image: currentRadio!['favicon'] != "" 
-                  ? DecorationImage(image: NetworkImage(currentRadio!['favicon']), fit: BoxFit.cover)
+                image: radio['favicon'] != "" && radio['favicon'] != null
+                  ? DecorationImage(image: NetworkImage(radio['favicon']), fit: BoxFit.cover)
                   : null,
               ),
             ),
@@ -318,12 +320,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    currentRadio!['name'] ?? 'Rádio',
+                    radio['name'] ?? 'Rádio',
                     style: const TextStyle(fontWeight: FontWeight.bold),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  _buildLocationRow(currentRadio!), // Sua lógica de localização
+                  _buildLocationRow(radio), // Sua lógica de localização
                 ],
               ),
             ),

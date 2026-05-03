@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'log_service.dart' as Log;
+//import 'log_service.dart' as Log;
 
 class RadioApiService {
   // URL base da API

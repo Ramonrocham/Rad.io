@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart'; // Certifique-se de importar o player
 
 class PlayerScreen extends StatelessWidget {
-  final Map<String, dynamic> radio;
+  final ValueNotifier<Map<String, dynamic>?> radioNotifier;
   final String categoryTitle;
   final AudioPlayer player; // Recebe o player da HomeScreen
   final VoidCallback onNext; // Função para ir para a próxima rádio
@@ -10,7 +10,7 @@ class PlayerScreen extends StatelessWidget {
 
   const PlayerScreen({
     super.key, 
-    required this.radio, 
+    required this.radioNotifier,
     required this.categoryTitle, 
     required this.player,
     required this.onNext,
@@ -19,72 +19,55 @@ class PlayerScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 1. Usamos o StreamBuilder para reagir ao estado do áudio (play/pause)
-    return StreamBuilder<PlayerState>(
-      stream: player.playerStateStream,
-      builder: (context, snapshot) {
-        final playerState = snapshot.data;
-        final bool isPlaying = playerState?.playing ?? false;
+    // 4. Usamos o ValueListenableBuilder para reconstruir o UI quando a rádio mudar
+    return ValueListenableBuilder<Map<String, dynamic>?>(
+      valueListenable: radioNotifier,
+      builder: (context, radio, child) {
+        if (radio == null) return const SizedBox.shrink();
 
-        return Scaffold(
-          backgroundColor: const Color(0xFF121212),
-          body: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 10),
-              child: Column(
-                children: [
-                  // Topo com Título e Logo
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
+        return StreamBuilder<PlayerState>(
+          stream: player.playerStateStream,
+          builder: (context, snapshot) {
+            final bool isPlaying = snapshot.data?.playing ?? false;
+
+            return Scaffold(
+              backgroundColor: const Color(0xFF121212),
+              body: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 10),
+                  child: Column(
                     children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_drop_down_sharp, size: 40, color: Colors.white),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                      Text(
-                        categoryTitle.toUpperCase(),
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1.2),
-                      ),
-                      Image.asset('assets/images/logo.png', height: 25),
+                      // O resto do seu layout usa a variável 'radio' do builder
+                      // Ex: Text(radio['name'] ?? '...')
+                      _buildHeader(context),
+                      const Spacer(),
+                      _buildRadioArt(context, radio),
+                      const Spacer(),
+                      _buildRadioInfo(radio),
+                      const SizedBox(height: 30),
+                      _buildProgressSection(context),
+                      const SizedBox(height: 20),
+                      _buildPlaybackControls(isPlaying),
+                      const SizedBox(height: 60)
                     ],
                   ),
-                  const Spacer(),
-
-                  // Arte da Rádio
-                  _buildRadioArt(context),
-                  
-                  const Spacer(),
-
-                  // Informações da Rádio
-                  _buildRadioInfo(),
-
-                  const SizedBox(height: 30),
-
-                  // Barra de Progresso (Visual por enquanto)
-                  _buildProgressSection(context),
-
-                  const SizedBox(height: 20),
-
-                  // 2. Controles de Playback Funcionais
-                  _buildPlaybackControls(isPlaying),
-                  
-                  const SizedBox(height: 60)
-                ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );
   }
 
-  Widget _buildRadioArt(BuildContext context) {
+  
+
+  Widget _buildRadioArt(BuildContext context, Map<String, dynamic> radio) {
     return Container(
       width: MediaQuery.of(context).size.width * 0.8,
       height: MediaQuery.of(context).size.width * 0.8,
       decoration: BoxDecoration(
-        color: const Color(0xFF5D4E2E),
+        color: const Color(0xFF5D4E2E), 
         borderRadius: BorderRadius.circular(20),
         image: radio['favicon'] != null && radio['favicon'] != ""
             ? DecorationImage(image: NetworkImage(radio['favicon']), fit: BoxFit.cover)
@@ -93,10 +76,31 @@ class PlayerScreen extends StatelessWidget {
           BoxShadow(color: Colors.black.withOpacity(0.5), blurRadius: 20, offset: const Offset(0, 10))
         ],
       ),
+      child: (radio['favicon'] == null || radio['favicon'] == "")
+          ? const Center(child: Icon(Icons.radio, size: 80, color: Colors.white10))
+          : null,
     );
   }
 
-  Widget _buildRadioInfo() {
+  Widget _buildHeader(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.arrow_drop_down_sharp, size: 40, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+        Text(
+          categoryTitle.toUpperCase(),
+          style: const TextStyle(fontFamily: 'poppins', fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1.2),
+        ),
+        Image.asset('assets/images/logo.png', height: 25, errorBuilder: (context, error, stack) => const Icon(Icons.radio)),
+      ],
+    );
+  }
+
+  Widget _buildRadioInfo(Map<String, dynamic> radio) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -111,7 +115,7 @@ class PlayerScreen extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 4),
-              _buildLocationRow(),
+              _buildLocationRow(radio), // Passa a radio para a localização também
             ],
           ),
         ),
@@ -157,7 +161,7 @@ class PlayerScreen extends StatelessWidget {
 
   // --- Widgets Auxiliares para Organização ---
 
-  Widget _buildLocationRow() {
+  Widget _buildLocationRow(Map<String, dynamic> radio) {
     final String locationText = [radio['state'], radio['countrycode']]
         .where((s) => s != null && s != "")
         .join(", ");
