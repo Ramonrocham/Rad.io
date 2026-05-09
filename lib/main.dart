@@ -6,7 +6,19 @@ import 'player_screen.dart';
 
 import 'package:just_audio/just_audio.dart';
 
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+
+import 'dart:io';
+
 void main() {
+
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  if (Platform.isLinux || Platform.isWindows) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
+
   runApp(const RadioApp());
 }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:radio/radio_database_service.dart';
 import 'package:text_scroll/text_scroll.dart'; // Certifique-se de importar o player
 
 class PlayerScreen extends StatelessWidget {
@@ -9,7 +10,9 @@ class PlayerScreen extends StatelessWidget {
   final VoidCallback onNext; // Função para ir para a próxima rádio
   final VoidCallback onPrevious; // Função para voltar rádio
 
-  const PlayerScreen({
+  final ValueNotifier<bool> isFavoriteNotifier = ValueNotifier(false);
+
+  PlayerScreen({
     super.key, 
     required this.radioNotifier,
     required this.categoryTitle, 
@@ -18,6 +21,11 @@ class PlayerScreen extends StatelessWidget {
     required this.onPrevious,
   });
 
+  void _updateFavoriteStatus(String uuid) async {
+    bool fav = await RadioDatabaseService.isFavorite(uuid);
+    isFavoriteNotifier.value = fav;
+  }
+
   @override
   Widget build(BuildContext context) {
     // 4. Usamos o ValueListenableBuilder para reconstruir o UI quando a rádio mudar
@@ -25,6 +33,8 @@ class PlayerScreen extends StatelessWidget {
       valueListenable: radioNotifier,
       builder: (context, radio, child) {
         if (radio == null) return const SizedBox.shrink();
+
+        _updateFavoriteStatus(radio['stationuuid']);
 
         return StreamBuilder<PlayerState>(
           stream: player.playerStateStream,
@@ -48,7 +58,7 @@ class PlayerScreen extends StatelessWidget {
                       const SizedBox(height: 30),
                       _buildProgressSection(context, radio, isPlaying),
                       const SizedBox(height: 20),
-                      _buildPlaybackControls(isPlaying),
+                      _buildPlaybackControls(isPlaying, radio),
                       const SizedBox(height: 60)
                     ],
                   ),
@@ -128,7 +138,7 @@ class PlayerScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPlaybackControls(bool isPlaying) {
+  Widget _buildPlaybackControls(bool isPlaying, Map<String, dynamic> radio) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
@@ -159,7 +169,24 @@ class PlayerScreen extends StatelessWidget {
           icon: const Icon(Icons.skip_next, size: 40, color: Colors.white),
           onPressed: onNext,
         ),
-        const Icon(Icons.favorite_border, color: Color(0xFFFF6B00)),
+        ValueListenableBuilder<bool>(
+        valueListenable: isFavoriteNotifier,
+        builder: (context, isFav, child) {
+          return IconButton(
+            icon: Icon(
+              isFav ? Icons.favorite : Icons.favorite_border,
+              color: const Color(0xFFFF6B00),
+              size: 30,
+            ),
+            onPressed: () async {
+              // 5. Chama o toggle que criamos no DatabaseService
+              bool newStatus = await RadioDatabaseService.toggleFavorite(radio);
+              // 6. Atualiza o ícone na hora
+              isFavoriteNotifier.value = newStatus;
+            },
+          );
+        },
+      ),
       ],
     );
   }
@@ -189,10 +216,15 @@ class PlayerScreen extends StatelessWidget {
         .join(", ");
 
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          locationText,
-          style: const TextStyle(fontSize: 15, color: Colors.grey),
+        Flexible(
+        child: Text(
+            locationText, 
+            style: const TextStyle(fontSize: 15, color: Colors.grey),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          )
         ),
         const SizedBox(width: 8),
         if (radio['countrycode'] != null && radio['countrycode'] != "")
