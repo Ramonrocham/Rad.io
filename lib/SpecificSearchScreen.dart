@@ -85,6 +85,10 @@ class SpecificSearchScreen extends StatelessWidget {
   }
 
   Widget _buildRadioItem(dynamic radio, int index, List<dynamic> allRadios) {
+  final String? favicon = radio['favicon'];
+  final bool hasValidImage = favicon != null && 
+                             favicon.isNotEmpty && 
+                             favicon != "null";  
   return GestureDetector(
     // Agora passamos a lista completa e o índice do clique
     onTap: () => onRadioTap(allRadios, index), 
@@ -96,7 +100,7 @@ class SpecificSearchScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: const Color(0xFF282828), // Seu cinza padrão
               borderRadius: BorderRadius.circular(8),
-              image: radio['favicon'] != null && radio['favicon'] != ""
+              image: hasValidImage
                   ? DecorationImage(
                       image: NetworkImage(radio['favicon']), 
                       fit: BoxFit.cover
@@ -104,7 +108,7 @@ class SpecificSearchScreen extends StatelessWidget {
                   : null,
             ),
             // Fallback caso a imagem falhe
-            child: (radio['favicon'] == null || radio['favicon'] == "")
+            child: !hasValidImage
                 ? const Center(child: Icon(Icons.radio, color: Colors.white24))
                 : null,
           ),

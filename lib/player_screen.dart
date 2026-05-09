@@ -63,22 +63,28 @@ class PlayerScreen extends StatelessWidget {
   
 
   Widget _buildRadioArt(BuildContext context, Map<String, dynamic> radio) {
+    final String? favicon = radio['favicon'];
+    final bool hasValidImage = favicon != null && 
+                             favicon.isNotEmpty && 
+                             favicon != "null";
     return Container(
       width: MediaQuery.of(context).size.width * 0.8,
       height: MediaQuery.of(context).size.width * 0.8,
       decoration: BoxDecoration(
         color: const Color(0xFF5D4E2E), 
         borderRadius: BorderRadius.circular(20),
-        image: radio['favicon'] != null && radio['favicon'] != ""
+        image: hasValidImage
             ? DecorationImage(image: NetworkImage(radio['favicon']), fit: BoxFit.cover)
             : null,
         boxShadow: [
           BoxShadow(color: Colors.black.withOpacity(0.5), blurRadius: 20, offset: const Offset(0, 10))
         ],
       ),
-      child: (radio['favicon'] == null || radio['favicon'] == "")
-          ? const Center(child: Icon(Icons.radio, size: 80, color: Colors.white10))
-          : null,
+      child: !hasValidImage
+        ? const Center(
+            child: Icon(Icons.radio, size: 80, color: Colors.white10),
+          )
+        : null,
     );
   }
 
