@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:just_audio/just_audio.dart'; // Certifique-se de importar o player
+import 'package:just_audio/just_audio.dart';
+import 'package:text_scroll/text_scroll.dart'; // Certifique-se de importar o player
 
 class PlayerScreen extends StatelessWidget {
   final ValueNotifier<Map<String, dynamic>?> radioNotifier;
@@ -110,22 +111,19 @@ class PlayerScreen extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                radio['name']?.trim() ?? 'Nome da Rádio',
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 4),
-              _buildLocationRow(radio), // Passa a radio para a localização também
-            ],
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildRadioName(radio['name'] ?? 'Sem nome'),
+                const SizedBox(height: 4),
+                _buildLocationRow(radio), // Passa a radio para a localização também
+              ],
+            ),
           ),
-        ),
+        )
       ],
     );
   }
@@ -167,6 +165,23 @@ class PlayerScreen extends StatelessWidget {
   }
 
   // --- Widgets Auxiliares para Organização ---
+
+  Widget _buildRadioName(String name) {
+    return TextScroll(
+      name.trim(),
+      mode: TextScrollMode.endless, // Ele vai e volta, ou use .bouncing para girar
+      velocity: const Velocity(pixelsPerSecond: Offset(30, 0)),
+      delayBefore: const Duration(seconds: 2),
+      pauseBetween: const Duration(seconds: 1),
+      style: const TextStyle(
+        fontSize: 24, 
+        fontWeight: FontWeight.bold,
+        color: Colors.white,
+      ),
+      textAlign: TextAlign.start,
+      intervalSpaces: 15,
+    );
+  }
 
   Widget _buildLocationRow(Map<String, dynamic> radio) {
     final String locationText = [radio['state'], radio['countrycode']]
