@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:radio/radio_database_service.dart';
-import 'package:text_scroll/text_scroll.dart'; // Certifique-se de importar o player
+import 'package:text_scroll/text_scroll.dart';
+import 'radio_share_button.dart';
 
 class PlayerScreen extends StatelessWidget {
   final ValueNotifier<Map<String, dynamic>?> radioNotifier;
@@ -142,7 +143,7 @@ class PlayerScreen extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        const Icon(Icons.ios_share_rounded, color: Color(0xFFFF6B00)),
+        RadioShareButton(radio: radio),
         // Botão Anterior
         IconButton(
           icon: const Icon(Icons.skip_previous, size: 40, color: Colors.white),
