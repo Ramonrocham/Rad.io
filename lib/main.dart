@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:radio/mini_player.dart';
 
 import 'SpecificSearchScreen.dart';
 
@@ -144,7 +145,7 @@ class _HomeScreenState extends State<HomeScreen> {
               right: 0,
               child: Column(
                 children: [
-                  _buildBottomPlayer(context),
+                  MiniPlayer(radioNotifier: currentRadioNotifier, player: _audioPlayer, radiosList: currentRadiosList, currentIndex: currentRadioIndex, categoryTitle: currentCategoryTitle ?? '', onPlay: playRadio),
                   _buildBottomNav(),
                 ],
               ),
