@@ -35,9 +35,28 @@ class _MiniPlayerState extends State<MiniPlayer> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    // 3. Ouve o banco de dados. Sempre que o "sino" tocar, a gente re-checa o favorito.
+    RadioDatabaseService.favoriteChangeNotifier.addListener(_refreshFavoriteStatus);
+  }
+
+  @override
+  void dispose() {
+    // 4. Importante para evitar vazamento de memória no Android/Linux
+    RadioDatabaseService.favoriteChangeNotifier.removeListener(_refreshFavoriteStatus);
+    super.dispose();
+  }
+
+  void _refreshFavoriteStatus() {
+    final radio = widget.radioNotifier.value;
+    if (radio != null) {
+      _checkFav(radio['stationuuid']);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    
-    final ValueNotifier<bool> isFavoriteNotifier = ValueNotifier(false);
 
     return ValueListenableBuilder<Map<String, dynamic>?>(
       valueListenable: widget.radioNotifier,

@@ -3,6 +3,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
 class RadioDatabaseService {
+  static final ValueNotifier<int> favoriteChangeNotifier = ValueNotifier(0);
   static Database? _db;
 
   static Future<Database> get database async {
@@ -66,7 +67,7 @@ class RadioDatabaseService {
       where: 'stationuuid = ?',
       whereArgs: [radio['stationuuid']],
     );
-
+    favoriteChangeNotifier.value++;
     if (maps.isNotEmpty) {
       await db.delete(
         'favorites',
