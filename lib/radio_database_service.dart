@@ -5,6 +5,7 @@ import 'package:path/path.dart';
 class RadioDatabaseService {
   static final ValueNotifier<int> favoriteChangeNotifier = ValueNotifier(0);
   static Database? _db;
+  static final ValueNotifier<int> recentChangeNotifier = ValueNotifier(0);
 
   static Future<Database> get database async {
     if (_db != null) return _db!;
@@ -54,7 +55,7 @@ class RadioDatabaseService {
 
   static Future<List<Map<String, dynamic>>> getFavorites() async {
     final db = await database;
-    return await db.query('favorites');
+    return await db.query('favorites',orderBy: 'ROWID DESC');
   }
 
   // Método unificado para favoritar/desfavoritar
@@ -85,6 +86,7 @@ class RadioDatabaseService {
         'countrycode': radio['countrycode'],
         'tags': radio['tags']?.toString() ?? "",
         'bitrate': radio['bitrate'] ?? 0,
+        //'timestamp': DateTime.now().toIso8601String(),
       }, conflictAlgorithm: ConflictAlgorithm.replace);
       return true; // Foi adicionado
     }
@@ -102,6 +104,12 @@ class RadioDatabaseService {
 
   // --- MÉTODOS PARA RECENTES ---
 
+
+  static Future<void> clearRecent() async {
+    final db = await database;
+    await db.delete('recent');
+  }
+
   static Future<void> addRecent(Map<String, dynamic> radio) async {
     final db = await database;
     await db.insert('recent', {
@@ -114,15 +122,14 @@ class RadioDatabaseService {
       'tags': radio['tags']?.toString() ?? "",
       'bitrate': radio['bitrate'] ?? 0,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
+    
+    // Avisa que a lista de recentes mudou
+    recentChangeNotifier.value++;
   }
 
   static Future<List<Map<String, dynamic>>> getRecent() async {
     final db = await database;
-    return await db.query('recent', orderBy: 'timestamp DESC', limit: 20);
-  }
-
-  static Future<void> clearRecent() async {
-    final db = await database;
-    await db.delete('recent');
+    // Ajustado para o limite de 30 que você pediu
+    return await db.query('recent', orderBy: 'timestamp DESC', limit: 30);
   }
 }

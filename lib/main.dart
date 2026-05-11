@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:radio/mini_player.dart';
+import 'package:radio/radio_database_service.dart';
 
 import 'SpecificSearchScreen.dart';
 
@@ -73,6 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (e) {
       print('Erro ao tocar a rádio: $e');
     }
+    RadioDatabaseService.addRecent(currentRadioNotifier.value!);
   }
 
   @override
