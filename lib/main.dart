@@ -59,6 +59,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<dynamic> radiosRecomendados = [];
   List<dynamic> radiosDescubraMais = [];
+  List<dynamic> radiosMaisOuvidas = [];
+  List<dynamic> radiosMaisOuvidasBrasil = [];
   
   bool isLoading = true;
 
@@ -90,12 +92,17 @@ class _HomeScreenState extends State<HomeScreen> {
       final resultados = await Future.wait([
         RadioApiService().fetchRecomendados(),
         RadioApiService().fetchDescubraMais(),
+        RadioApiService().fetchRadios('topclick/60'),
+        RadioApiService().fetchRadios('search?order=clickcount&reverse=true&country=Brazil'),
       ]);
 
       // Atualiza o estado com as listas reais e desativa o loading
       setState(() {
         radiosRecomendados = resultados[0];
+        radiosRecomendados.removeAt(0);
         radiosDescubraMais = resultados[1];
+        radiosMaisOuvidas = resultados[2];
+        radiosMaisOuvidasBrasil = resultados[3];
         isLoading = false;
       });
     } catch (e) {
@@ -152,9 +159,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       mainAxisSpacing: 10,
                       childAspectRatio: 2.2,
                       children: [
-                        _buildQuickCard(context: context, title: 'Mais ouvidas', icon: Icons.local_fire_department, endpoint: 'topclick/30'),
+                        _buildQuickCard(context: context, title: 'Mais ouvidas', icon: Icons.local_fire_department, radios: radiosMaisOuvidas), // PASSA A LISTA PRÉ-CARREGADA
                         _buildQuickCard(context: context, title: 'Favoritos', icon: Icons.favorite, isLocal: true), // LOCAL
-                        _buildQuickCard(context: context, title: 'Mais ouvidas Brasil', icon: Icons.local_fire_department, endpoint: 'search?order=clickcount&reverse=true&country=Brazil'),
+                        _buildQuickCard(context: context, title: 'Mais ouvidas Brasil', icon: Icons.local_fire_department, radios: radiosMaisOuvidasBrasil), // PASSA A LISTA PRÉ-CARREGADA
                         _buildQuickCard(context: context, title: 'Recentes', icon: Icons.refresh, isLocal: true), // LOCAL
                       ],
                     ),
@@ -220,7 +227,7 @@ class _HomeScreenState extends State<HomeScreen> {
   required BuildContext context,
   required String title,
   required IconData icon,
-  String? endpoint,
+  List<dynamic>? radios,
   bool isLocal = false,
 }) {
   return GestureDetector(
@@ -230,8 +237,8 @@ class _HomeScreenState extends State<HomeScreen> {
         MaterialPageRoute(
           builder: (context) => SpecificSearchScreen(
             title: title,
-            endpoint: endpoint ?? '',
             isLocal: isLocal,
+            initialRadios: radios,
             // CORREÇÃO AQUI: Adicione (list, index) para bater com a nova assinatura
             onRadioTap: (list, index) { 
               playRadio(list, index, title); // Agora passa os 3 parâmetros

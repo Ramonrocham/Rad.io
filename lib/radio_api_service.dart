@@ -7,7 +7,7 @@ class RadioApiService {
   static const String _baseUrl = 'https://de1.api.radio-browser.info/json/stations';
 
   /// Faz uma requisição genérica para qualquer endpoint da Radio Browser
-  static Future<List<dynamic>> fetchRadios(String endpoint) async {
+  Future<List<dynamic>> fetchRadios(String endpoint) async {
     try {
       final response = await http.get(Uri.parse('$_baseUrl/$endpoint'));
 
@@ -24,7 +24,7 @@ class RadioApiService {
   Future<List<dynamic>> fetchRecomendados() async {
     try {
       final response = await http.get(
-        Uri.parse('$_baseUrl/search?order=topvote&reverse=true&bitrateMin=100&country=Brazil'),
+        Uri.parse('$_baseUrl/search?order=topvote&reverse=true&bitrateMin=100&country=Brazil&limit=60'),
       );
       if (response.statusCode == 200) {
         return jsonDecode(response.statusCode == 200 ? response.body : '[]');
@@ -39,7 +39,7 @@ class RadioApiService {
   Future<List<dynamic>> fetchDescubraMais() async {
     try {
       final response = await http.get(
-        Uri.parse('$_baseUrl/search?order=topvote&reverse=true&bitrateMin=100'),
+        Uri.parse('$_baseUrl/search?order=topvote&reverse=true&bitrateMin=100&limit=60'),
       );
       if (response.statusCode == 200) {
         return jsonDecode(response.body);

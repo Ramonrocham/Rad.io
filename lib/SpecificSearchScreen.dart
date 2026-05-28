@@ -4,7 +4,7 @@ import 'radio_database_service.dart';
 
 class SpecificSearchScreen extends StatelessWidget {
   final String title;
-  final String endpoint;
+  final List<dynamic>? initialRadios;
   final bool isLocal;
 
   final Function(List<dynamic> radios, int index) onRadioTap;
@@ -12,8 +12,8 @@ class SpecificSearchScreen extends StatelessWidget {
   const SpecificSearchScreen({
     super.key, 
     required this.title, 
-    required this.endpoint, 
-    required this.onRadioTap, // 2. Torne-a obrigatória no construtor
+    required this.onRadioTap,
+    this.initialRadios,
     this.isLocal = false,
   });
 
@@ -26,7 +26,7 @@ class SpecificSearchScreen extends StatelessWidget {
           ? RadioDatabaseService.getFavorites() 
           : RadioDatabaseService.getRecent();
       } else {
-        return RadioApiService.fetchRadios(endpoint);
+        return Future.value(initialRadios ?? []); //RadioApiService.fetchRadios(endpoint);
       }
     }
 
