@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:radio/mini_player.dart';
+import 'package:radio/radio_api_service.dart';
 import 'package:radio/radio_database_service.dart';
 
 import 'SpecificSearchScreen.dart';
@@ -26,6 +27,7 @@ void main() {
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+  
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -55,6 +57,11 @@ class _HomeScreenState extends State<HomeScreen> {
   List<dynamic> currentRadiosList = []; 
   int currentRadioIndex = -1;
 
+  List<dynamic> radiosRecomendados = [];
+  List<dynamic> radiosDescubraMais = [];
+  
+  bool isLoading = true;
+
   final ValueNotifier<Map<String, dynamic>?> currentRadioNotifier = ValueNotifier(null);
   String? currentCategoryTitle;
 
@@ -77,6 +84,30 @@ class _HomeScreenState extends State<HomeScreen> {
     RadioDatabaseService.addRecent(currentRadioNotifier.value!);
   }
 
+  Future<void> _loadRadioData() async {
+    try {
+      // Dispara as duas requisições HTTP simultaneamente
+      final resultados = await Future.wait([
+        RadioApiService().fetchRecomendados(),
+        RadioApiService().fetchDescubraMais(),
+      ]);
+
+      // Atualiza o estado com as listas reais e desativa o loading
+      setState(() {
+        radiosRecomendados = resultados[0];
+        radiosDescubraMais = resultados[1];
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() => isLoading = false);
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRadioData(); // Chama a função que faz a requisição por fora
+  }
   @override
   
   Widget build(BuildContext context) {
@@ -123,18 +154,44 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         _buildQuickCard(context: context, title: 'Mais ouvidas', icon: Icons.local_fire_department, endpoint: 'topclick/30'),
                         _buildQuickCard(context: context, title: 'Favoritos', icon: Icons.favorite, isLocal: true), // LOCAL
-                        _buildQuickCard(context: context, title: 'Mais ouvidas Brasil', icon: Icons.local_fire_department, endpoint: 'bycountry/brazil'),
+                        _buildQuickCard(context: context, title: 'Mais ouvidas Brasil', icon: Icons.local_fire_department, endpoint: 'search?order=clickcount&reverse=true&country=Brazil'),
                         _buildQuickCard(context: context, title: 'Recentes', icon: Icons.refresh, isLocal: true), // LOCAL
                       ],
                     ),
-
+                    
                     const SizedBox(height: 40),
                     _buildSectionTitle('Recomendados'),
-                    _buildRadioGrid([], 'Recomendados'), // Você precisará passar a lista de rádios recomendados aqui
+                    const SizedBox(height: 10),
+
+                    // Se estiver carregando as APIs, mostra o indicador uma única vez para as duas grades
+                    if (isLoading)
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(20.0),
+                          child: CircularProgressIndicator(color: Color(0xFFFF6B00)),
+                        ),
+                      )
+                    else if (radiosRecomendados.isEmpty)
+                      const Text("Nenhuma rádio recomendada encontrada.", style: TextStyle(color: Colors.grey))
+                    else
+                      // Passa a lista limpa e direta, sem misturar lógica de async no layout
+                      _buildRadioGrid(radiosRecomendados, 'Recomendados'),
 
                     const SizedBox(height: 30),
                     _buildSectionTitle('Descubra mais'),
-                    _buildRadioGrid([], 'Descubra mais'),
+                    const SizedBox(height: 10),
+
+                    if (isLoading)
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(20.0),
+                          child: CircularProgressIndicator(color: Color(0xFFFF6B00)),
+                        ),
+                      )
+                    else if (radiosDescubraMais.isEmpty)
+                      const Text("Nenhuma rádio encontrada.", style: TextStyle(color: Colors.grey))
+                    else
+                      _buildRadioGrid(radiosDescubraMais, 'Descubra mais'),
                   ],
                 ),
               ),
@@ -223,44 +280,67 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Grid das rádios (Recomendados / Descubra)
   Widget _buildRadioGrid(List<dynamic> radios, String sectionTitle) {
-    return GridView.builder(
+    
+    if (radios.isEmpty) return const SizedBox.shrink();
+
+    return SizedBox( 
+    height: 310,
+    child: GridView.builder(
+      scrollDirection: Axis.horizontal,
       shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
+      //physics: const NeverScrollableScrollPhysics(),
       itemCount: radios.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 20,
-        childAspectRatio: 0.7,
+        crossAxisCount: 2,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 14,
+        childAspectRatio: 1.25,
       ),
       itemBuilder: (context, index) {
         final radio = radios[index];
         return GestureDetector(
-          onTap: () => playRadio(radios, index, sectionTitle), // Passa a lista e o index
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF5D4E2E),
-                    borderRadius: BorderRadius.circular(4),
-                    image: radio['favicon'] != "" 
-                      ? DecorationImage(image: NetworkImage(radio['favicon']), fit: BoxFit.cover)
-                      : null,
+          onTap: () => playRadio(radios, index, sectionTitle),
+          child: SizedBox(
+            width: 105, // Largura máxima fixa de cada coluna/card
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF282828), // Cinza padrão do Rad.io de fundo
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: radio['favicon'] != null && radio['favicon'] != ""
+                        ? Image.network(
+                            radio['favicon'],
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: double.infinity,
+                            // Fallback seguro se a imagem da API falhar
+                            errorBuilder: (context, error, stackTrace) => 
+                              const Icon(Icons.radio, color: Colors.white24, size: 28),
+                          )
+                        : const Icon(Icons.radio, color: Colors.white24, size: 28),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                radio['name'] ?? 'Rádio',
-                maxLines: 2,
-                style: const TextStyle(fontSize: 11, color: Colors.white70),
-              ),
-            ],
+                const SizedBox(height: 6),
+                Text(
+                  radio['name']?.toString().trim() ?? 'Rádio',
+                  maxLines: 1, // 1 ou 2 linhas, dependendo do quanto quer economizar espaço
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 11, color: Colors.white70),
+                ),
+              ],
+            ),
           ),
         );
       },
+    )
     );
   }
 

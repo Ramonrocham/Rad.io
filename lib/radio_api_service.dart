@@ -12,17 +12,41 @@ class RadioApiService {
       final response = await http.get(Uri.parse('$_baseUrl/$endpoint'));
 
       if (response.statusCode == 200) {
-        /*Log.LogService.saveLog('API', '''
-          Endpoint: $endpoint
-          Status: ${response.statusCode}
-          Body: ${const JsonEncoder.withIndent('  ').convert(json.decode(response.body))}
-          '''); // Log parcial para evitar excesso de dados*/
         return json.decode(response.body);
       } else {
         throw Exception('Erro na API: ${response.statusCode}');
       }
     } catch (e) {
       throw Exception('Falha na conexão: $e');
+    }
+  }
+
+  Future<List<dynamic>> fetchRecomendados() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$_baseUrl/search?order=topvote&reverse=true&bitrateMin=100&country=Brazil'),
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.statusCode == 200 ? response.body : '[]');
+      }
+      return [];
+    } catch (e) {
+      return []; // Retorna lista vazia em caso de falha de conexão
+    }
+  }
+
+// Função para buscar as rádios mais votadas (Descubra mais)
+  Future<List<dynamic>> fetchDescubraMais() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$_baseUrl/search?order=topvote&reverse=true&bitrateMin=100'),
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
+      return [];
+    } catch (e) {
+      return [];
     }
   }
 }
