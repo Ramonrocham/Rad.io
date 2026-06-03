@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:radio/radio_card_item.dart';
 import 'radio_database_service.dart';
 
 class SpecificSearchScreen extends StatelessWidget {
@@ -6,7 +7,7 @@ class SpecificSearchScreen extends StatelessWidget {
   final List<dynamic>? initialRadios;
   final bool isLocal;
 
-  final Function(List<dynamic> radios, int index) onRadioTap;
+  final Function(List<dynamic> radios, int index, String categoryTitle) onRadioTap;
 
   const SpecificSearchScreen({
     super.key, 
@@ -54,7 +55,7 @@ class SpecificSearchScreen extends StatelessWidget {
                     itemCount: radios.length,
                     itemBuilder: (context, index) {
                       final radio = radios[index];
-                      return _buildRadioItem(radio, index, radios); // Garante que este método retorne um Widget
+                      return RadioCardItem(radio: radio, index: index, allRadios: radios, onRadioTap: onRadioTap); // Garante que este método retorne um Widget
                     },
                   );
                 },
@@ -81,66 +82,5 @@ class SpecificSearchScreen extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  Widget _buildRadioItem(dynamic radio, int index, List<dynamic> allRadios) {
-  final String? favicon = radio['favicon'];
-  final bool hasValidImage = favicon != null && 
-                             favicon.isNotEmpty && 
-                             favicon != "null";  
-  return GestureDetector(
-    // Agora passamos a lista completa e o índice do clique
-    onTap: () => onRadioTap(allRadios, index), 
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFF282828), // Seu cinza padrão
-              borderRadius: BorderRadius.circular(8),
-              image: hasValidImage
-                  ? DecorationImage(
-                      image: NetworkImage(radio['favicon']), 
-                      fit: BoxFit.cover
-                    )
-                  : null,
-            ),
-            // Fallback caso a imagem falhe
-            child: !hasValidImage
-                ? const Center(child: Icon(Icons.radio, color: Colors.white24))
-                : null,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          radio['name']?.trim() ?? 'Rádio Sem Nome',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-        ),
-        Wrap(
-          crossAxisAlignment: WrapCrossAlignment.center,
-          spacing: 5,
-          children: [
-            Text(
-              (radio['state'] != null && radio['state'] != "") 
-                  ? "${radio['state']}, ${radio['countrycode']}" 
-                  : "${radio['countrycode'] ?? ''}",
-              maxLines: 1,
-              style: const TextStyle(fontSize: 10, color: Colors.white70),
-            ),
-            // Exibe a bandeira apenas se o código do país existir
-            if (radio['countrycode'] != null && radio['countrycode'] != "")
-              Image.asset(
-                'icons/flags/png/${radio['countrycode'].toLowerCase()}.png',
-                package: 'country_icons',
-                height: 10,
-              )
-          ],
-        ),
-      ],
-    ),
-  );
   }
 }

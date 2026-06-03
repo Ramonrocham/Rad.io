@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:radio/radio_card_item.dart';
 import 'radio_api_service.dart';
 
 class SearchTab extends StatefulWidget {
   // Recebe a função do main.dart para tocar a música
-  final Function(List<dynamic>, int, String) onPlayRadio;
+  final Function(List<dynamic> radios, int index, String categoryTitle) onPlayRadio;
 
   const SearchTab({super.key, required this.onPlayRadio});
 
@@ -191,7 +192,7 @@ class _SearchTabState extends State<SearchTab> {
                             ),
                             itemCount: _searchResults.length,
                             itemBuilder: (context, index) {
-                              return _buildSearchResultItem(_searchResults[index], index);
+                              return RadioCardItem(radio: _searchResults[index], index: index, allRadios: _searchResults, onRadioTap: widget.onPlayRadio);
                             },
                           ),
           ),

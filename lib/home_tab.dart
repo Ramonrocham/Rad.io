@@ -1,16 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:radio/mini_player.dart';
-
-import 'package:radio/radio_api_service.dart';
-import 'package:radio/radio_database_service.dart';
-
+import 'package:radio/radio_card_item.dart';
 import 'SpecificSearchScreen.dart';
-
-import 'package:just_audio/just_audio.dart';
-
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-
-import 'dart:io';
 
 class HomeTab extends StatelessWidget {
   final List<dynamic> radiosRecomendados;
@@ -131,8 +121,8 @@ class HomeTab extends StatelessWidget {
             title: title,
             isLocal: isLocal,
             initialRadios: radios,
-            // CORREÇÃO AQUI: Adicione (list, index) para bater com a nova assinatura
-            onRadioTap: (list, index) { 
+            // CORREÇÃO AQUI: Adicione (list, index, title) para bater com a nova assinatura
+            onRadioTap: (list, index, title) { 
               playRadio(list, index, title); // Agora passa os 3 parâmetros
               Navigator.pop(context); 
             },
@@ -195,45 +185,13 @@ Widget _buildSectionTitle(String title) {
       ),
       itemBuilder: (context, index) {
         final radio = radios[index];
-        return GestureDetector(
-          onTap: () => playRadio(radios, index, sectionTitle),
-          child: SizedBox(
-            width: 105, // Largura máxima fixa de cada coluna/card
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF282828), // Cinza padrão do Rad.io de fundo
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: radio['favicon'] != null && radio['favicon'] != ""
-                        ? Image.network(
-                            radio['favicon'],
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                            height: double.infinity,
-                            // Fallback seguro se a imagem da API falhar
-                            errorBuilder: (context, error, stackTrace) => 
-                              const Icon(Icons.radio, color: Colors.white24, size: 28),
-                          )
-                        : const Icon(Icons.radio, color: Colors.white24, size: 28),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  radio['name']?.toString().trim() ?? 'Rádio',
-                  maxLines: 1, // 1 ou 2 linhas, dependendo do quanto quer economizar espaço
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 11, color: Colors.white70),
-                ),
-              ],
-            ),
+        return SizedBox(
+          width: 105, // Largura máxima fixa de cada coluna/card
+          child: RadioCardItem(
+            radio: radio, 
+            index: index, 
+            allRadios: radios, 
+            onRadioTap: (list, idx, title) => playRadio(list, idx, title), // Passa o título da seção para o playRadio
           ),
         );
       },
