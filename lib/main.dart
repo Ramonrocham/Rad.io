@@ -3,6 +3,7 @@ import 'package:radio/home_tab.dart';
 import 'package:radio/mini_player.dart';
 import 'package:radio/radio_api_service.dart';
 import 'package:radio/radio_database_service.dart';
+import 'package:radio/search_tab.dart';
 
 import 'SpecificSearchScreen.dart';
 
@@ -120,7 +121,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Stack(
+        child: IndexedStack(
+          index: _currentIndex,
           children: [
             // Conteúdo Rolável
             HomeTab(
@@ -131,20 +133,19 @@ class _HomeScreenState extends State<HomeScreen> {
               radiosMaisOuvidasBrasil: radiosMaisOuvidasBrasil,
               isLoading: isLoading,
             ),
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: Column(
+            SearchTab(
+              onPlayRadio: playRadio,
+            )
+          ],
+        ),
+      ),
+      bottomNavigationBar: Column(
+              mainAxisSize: MainAxisSize.min,
                 children: [
                   MiniPlayer(radioNotifier: currentRadioNotifier, player: _audioPlayer, radiosList: currentRadiosList, currentIndex: currentRadioIndex, categoryTitle: currentCategoryTitle ?? '', onPlay: playRadio),
                   _buildBottomNav(),
                 ],
-              ),
             ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -156,8 +157,24 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildNavItem(Icons.home, 'Home', true),
-          _buildNavItem(Icons.search, 'Search', false),
+          GestureDetector(
+          behavior: HitTestBehavior.opaque, // Torna toda a área clicável (não só o ícone)
+          onTap: () {
+            if (_currentIndex != 0) {
+              setState(() => _currentIndex = 0); // Muda para a aba 0 (Home)
+            }
+          },
+          child: _buildNavItem(Icons.home, 'Home', _currentIndex == 0), // Ativo se index for 0
+        ),
+          GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () {
+            if (_currentIndex != 1) {
+              setState(() => _currentIndex = 1); // Muda para a aba 1 (Search)
+            }
+          },
+          child: _buildNavItem(Icons.search, 'Search', _currentIndex == 1), // Ativo se index for 1
+        ),
         ],
       ),
     );
