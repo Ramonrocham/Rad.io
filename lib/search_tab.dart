@@ -184,7 +184,7 @@ class _SearchTabState extends State<SearchTab> {
           // 4. Ordenação (Ordenar por)
           Row(
             children: [
-              const Text('Ordenar por:', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500)),
+              const Text('Ordenar por:', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500)),
               const SizedBox(width: 19), 
               Expanded(
                 child: SingleChildScrollView(
