@@ -33,24 +33,27 @@ class RadioCardItem extends StatelessWidget {
             decoration: BoxDecoration(
               color: const Color(0xFF282828), // Seu cinza padrão
               borderRadius: BorderRadius.circular(8),
+              
             ),
-              child: ClipRRect(
-      borderRadius: BorderRadius.circular(4),
-      child: hasValidImage
-          ? Image.network(
+            child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: hasValidImage
+            ? Image.network(
               radio['favicon'],
               fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
               // O errorBuilder é o seu "catch" perfeito! 
               // Se a URL falhar, ele desenha o ícone no lugar da imagem quebrada.
               errorBuilder: (context, error, stackTrace) {
                 return Center(
-                  child: DiscoIcon(index: index, height: 50, width: 50), // Você pode ajustar o tamanho do ícone conforme necessário
+                  child: DiscoIcon(index: index, height: 85, width: 90), // Você pode ajustar o tamanho do ícone conforme necessário
                 );
               },
             )
-          // O "else" do seu if inicial (!hasValidImage)
+          // O "else" do seu if inicial (!hasValidImage)S
           : Center(
-              child: DiscoIcon(index: index, height: 50, width: 50),
+              child: DiscoIcon(index: index, height: 90, width: 90),
             ),
             )
     ),
@@ -63,26 +66,39 @@ class RadioCardItem extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
         ),
-        Wrap(
-          crossAxisAlignment: WrapCrossAlignment.center,
-          spacing: 5,
-          children: [
-            Text(
-              (radio['state'] != null && radio['state'] != "") 
-                  ? "${radio['state']}, ${radio['countrycode']}" 
-                  : "${radio['countrycode'] ?? ''}",
-              maxLines: 1,
-              style: const TextStyle(fontSize: 10, color: Colors.white70),
-            ),
-            // Exibe a bandeira apenas se o código do país existir
-            if (radio['countrycode'] != null && radio['countrycode'] != "")
-              Image.asset(
-                'icons/flags/png/${radio['countrycode'].toLowerCase()}.png',
-                package: 'country_icons',
-                height: 10,
-              )
-          ],
+        Row(
+  crossAxisAlignment: CrossAxisAlignment.center,
+  children: [
+    // 1. O ESTADO: Fica dentro do Flexible para ganhar os "..." se for gigante
+    if (radio['state'] != null && radio['state'].toString().trim().isNotEmpty)
+      Flexible(
+        child: Text(
+          radio['state'].toString().trim(),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis, // Corta e coloca reticências
+          style: const TextStyle(fontSize: 10, color: Colors.white70),
         ),
+      ),
+      
+    // 2. PAÍS: Texto fixo. Se tinha estado antes, coloca a vírgula. Se não, só a sigla.
+    Text(
+      (radio['state'] != null && radio['state'].toString().trim().isNotEmpty) 
+          ? ", ${radio['countrycode'] ?? ''}" 
+          : "${radio['countrycode'] ?? ''}",
+      style: const TextStyle(fontSize: 10, color: Colors.white70),
+    ),
+    
+    // 3. BANDEIRA: Fica fixa no final da linha
+    if (radio['countrycode'] != null && radio['countrycode'].toString().trim().isNotEmpty) ...[
+      const SizedBox(width: 5),
+      Image.asset(
+        'icons/flags/png/${radio['countrycode'].toString().toLowerCase()}.png',
+        package: 'country_icons',
+        height: 10,
+      ),
+    ],
+  ],
+)
       ],
     ),
   );

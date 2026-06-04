@@ -7,7 +7,7 @@ class DiscoIcon extends StatelessWidget {
   final double width;
   final double margin;
 
-  const DiscoIcon({super.key, required this.index, this.height = 60, this.width = 60, this.margin = 0});
+  const DiscoIcon({super.key, required this.index, this.height = 60, this.width = 60, this.margin = 2});
 
   @override
   Widget build(BuildContext context) {
