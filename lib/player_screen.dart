@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:radio/disco_icon.dart';
 import 'package:radio/radio_database_service.dart';
 import 'package:text_scroll/text_scroll.dart';
 import 'radio_share_button.dart';
@@ -12,6 +13,7 @@ class PlayerScreen extends StatelessWidget {
   final VoidCallback onPrevious; // Função para voltar rádio
 
   final ValueNotifier<bool> isFavoriteNotifier = ValueNotifier(false);
+  int currentIndex;
 
   PlayerScreen({
     super.key, 
@@ -20,6 +22,7 @@ class PlayerScreen extends StatelessWidget {
     required this.player,
     required this.onNext,
     required this.onPrevious,
+    required this.currentIndex,
   });
 
   void _updateFavoriteStatus(String uuid) async {
@@ -85,18 +88,26 @@ class PlayerScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF5D4E2E), 
         borderRadius: BorderRadius.circular(20),
-        image: hasValidImage
-            ? DecorationImage(image: NetworkImage(radio['favicon']), fit: BoxFit.cover)
-            : null,
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.5), blurRadius: 20, offset: const Offset(0, 10))
+          BoxShadow(color: Colors.black.withValues(alpha: 0.5), blurRadius: 20, offset: const Offset(0, 10))
         ],
       ),
-      child: !hasValidImage
-        ? const Center(
-            child: Icon(Icons.radio, size: 80, color: Colors.white10),
-          )
-        : null,
+      child: hasValidImage
+          ? Image.network(
+              radio['favicon'],
+              fit: BoxFit.cover,
+              // O errorBuilder é o seu "catch" perfeito! 
+              // Se a URL falhar, ele desenha o ícone no lugar da imagem quebrada.
+              errorBuilder: (context, error, stackTrace) {
+                return Center(
+                  child: DiscoIcon(index: currentIndex, height: 200, width: 200), // Você pode ajustar o tamanho do ícone conforme necessário
+                );
+              },
+            )
+          // O "else" do seu if inicial (!hasValidImage)
+          : Center(
+              child: DiscoIcon(index: currentIndex, height: 200, width: 200),
+            ),
     );
   }
 
@@ -147,7 +158,7 @@ class PlayerScreen extends StatelessWidget {
         // Botão Anterior
         IconButton(
           icon: const Icon(Icons.skip_previous, size: 40, color: Colors.white),
-          onPressed: onPrevious,
+          onPressed: () => {onPrevious(), currentIndex--},
         ),
         // Botão Central de Play/Pause dinâmico
         GestureDetector(
@@ -168,7 +179,7 @@ class PlayerScreen extends StatelessWidget {
         // Botão Próximo
         IconButton(
           icon: const Icon(Icons.skip_next, size: 40, color: Colors.white),
-          onPressed: onNext,
+          onPressed: () => {onNext(), currentIndex++}, // Passa o índice atual para a função
         ),
         ValueListenableBuilder<bool>(
         valueListenable: isFavoriteNotifier,
@@ -262,7 +273,7 @@ class PlayerScreen extends StatelessWidget {
               // Verde solicitado se estiver tocando, caso contrário, branco
               color: isPlaying ? const Color(0xFF4ADE80) : Colors.white,
               boxShadow: isPlaying 
-                ? [BoxShadow(color: const Color(0xFF4ADE80).withOpacity(0.3))]
+                ? [BoxShadow(color: const Color(0xFF4ADE80).withValues(alpha: 0.3))]
                 : [],
             ),
           ),

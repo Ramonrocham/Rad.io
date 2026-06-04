@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:radio/disco_icon.dart';
 
 class RadioCardItem extends StatelessWidget {
   final dynamic radio;
@@ -21,7 +22,7 @@ class RadioCardItem extends StatelessWidget {
                              favicon.isNotEmpty && 
                              favicon != "null"; 
 
-    return GestureDetector(
+    return GestureDetector(      
     // Agora passamos a lista completa e o índice do clique
     onTap: () => onRadioTap(allRadios, index, "Search Results"), // Você pode personalizar o título da categoria conforme necessário
     child: Column(
@@ -32,18 +33,28 @@ class RadioCardItem extends StatelessWidget {
             decoration: BoxDecoration(
               color: const Color(0xFF282828), // Seu cinza padrão
               borderRadius: BorderRadius.circular(8),
-              image: hasValidImage
-                  ? DecorationImage(
-                      image: NetworkImage(radio['favicon']), 
-                      fit: BoxFit.cover
-                    )
-                  : null,
             ),
-            // Fallback caso a imagem falhe
-            child: !hasValidImage
-                ? const Center(child: Icon(Icons.radio, color: Colors.white24))
-                : null,
-          ),
+              child: ClipRRect(
+      borderRadius: BorderRadius.circular(4),
+      child: hasValidImage
+          ? Image.network(
+              radio['favicon'],
+              fit: BoxFit.cover,
+              // O errorBuilder é o seu "catch" perfeito! 
+              // Se a URL falhar, ele desenha o ícone no lugar da imagem quebrada.
+              errorBuilder: (context, error, stackTrace) {
+                return Center(
+                  child: DiscoIcon(index: index, height: 50, width: 50), // Você pode ajustar o tamanho do ícone conforme necessário
+                );
+              },
+            )
+          // O "else" do seu if inicial (!hasValidImage)
+          : Center(
+              child: DiscoIcon(index: index, height: 50, width: 50),
+            ),
+            )
+    ),
+          
         ),
         const SizedBox(height: 8),
         Text(

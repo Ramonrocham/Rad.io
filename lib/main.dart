@@ -5,8 +5,6 @@ import 'package:radio/radio_api_service.dart';
 import 'package:radio/radio_database_service.dart';
 import 'package:radio/search_tab.dart';
 
-import 'SpecificSearchScreen.dart';
-
 import 'package:just_audio/just_audio.dart';
 
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -82,7 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
       await _audioPlayer.setUrl(currentRadioNotifier.value!['url_resolved'] ?? currentRadioNotifier.value!['url']);
       _audioPlayer.play();
     } catch (e) {
-      print('Erro ao tocar a rádio: $e');
+      //
     }
     RadioDatabaseService.addRecent(currentRadioNotifier.value!);
   }

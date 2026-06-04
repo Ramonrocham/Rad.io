@@ -63,7 +63,6 @@ class _SearchTabState extends State<SearchTab> {
         _isLoading = false;
       });
     } catch (e) {
-      print("Erro na busca: $e");
       setState(() {
         _isLoading = false;
       });
@@ -195,52 +194,6 @@ class _SearchTabState extends State<SearchTab> {
                               return RadioCardItem(radio: _searchResults[index], index: index, allRadios: _searchResults, onRadioTap: widget.onPlayRadio);
                             },
                           ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Layout individual de cada item da grade (idêntico ao mockup)
-  Widget _buildSearchResultItem(dynamic radio, int index) {
-    final String? favicon = radio['favicon'];
-    final bool hasValidImage = favicon != null && favicon.isNotEmpty && favicon != "null";
-
-    return GestureDetector(
-      onTap: () => widget.onPlayRadio(_searchResults, index, 'Busca: ${_searchController.text}'),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: const Color(0xFF5D4E2E), // Fundo padronizado do mockup
-                borderRadius: BorderRadius.circular(4),
-                image: hasValidImage
-                    ? DecorationImage(image: NetworkImage(radio['favicon']), fit: BoxFit.cover)
-                    : null,
-              ),
-              child: !hasValidImage
-                  ? const Center(child: Icon(Icons.radio, color: Colors.white24, size: 30))
-                  : null,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            radio['name']?.trim() ?? 'Rádio Sem Nome',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 11, color: Colors.white70),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            (radio['state'] != null && radio['state'] != "") 
-                ? "${radio['state']}, ${radio['countrycode'] ?? ''}" 
-                : "${radio['countrycode'] ?? ''}",
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 9, color: Colors.white38),
           ),
         ],
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:radio/disco_icon.dart';
 import 'radio_database_service.dart';
 import 'player_screen.dart';
 
@@ -82,6 +83,7 @@ class _MiniPlayerState extends State<MiniPlayer> {
                   player: widget.player,
                   onNext: () => widget.onPlay(widget.radiosList, (widget.currentIndex + 1) % widget.radiosList.length, widget.categoryTitle),
                   onPrevious: () => widget.onPlay(widget.radiosList, (widget.currentIndex - 1 + widget.radiosList.length) % widget.radiosList.length, widget.categoryTitle),
+                  currentIndex: widget.currentIndex,
                 ),
               ),
             ),
@@ -96,7 +98,7 @@ class _MiniPlayerState extends State<MiniPlayer> {
               ),
               child: Row(
                 children: [
-                  _buildArt(radio['favicon']),
+                  _buildArt(radio['favicon'], widget.currentIndex),
                   const SizedBox(width: 12),
                   Expanded(child: _buildInfo(radio)),
                   
@@ -138,17 +140,32 @@ class _MiniPlayerState extends State<MiniPlayer> {
     );
   }
 
-  Widget _buildArt(String? url) {
-    return Container(
-      width: 48, height: 48,
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
-        borderRadius: BorderRadius.circular(8),
-        image: url != null && url.isNotEmpty ? DecorationImage(image: NetworkImage(url), fit: BoxFit.cover) : null,
-      ),
-      child: url == null || url.isEmpty ? const Icon(Icons.radio, color: Colors.white24) : null,
-    );
-  }
+  Widget _buildArt(String? url, int index) { // <-- Adicionado o index aqui
+  final bool hasValidImage = url != null && url.isNotEmpty;
+
+  return Container(
+    width: 48, 
+    height: 48,
+    decoration: BoxDecoration(
+      color: const Color(0xFF1E1E1E),
+      borderRadius: BorderRadius.circular(8),
+    ),
+    child: ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: hasValidImage
+          ? Image.network(
+              url,
+              fit: BoxFit.cover,
+              // Se a URL falhar ao carregar, exibe o seu DiscoIcon
+              errorBuilder: (context, error, stackTrace) {
+                return DiscoIcon(index: index, margin: 6);
+              },
+            )
+          // Se a URL vier nula ou vazia da API, exibe o seu DiscoIcon
+          : DiscoIcon(index: index, margin: 6),
+    ),
+  );
+}
 
   Widget _buildInfo(Map<String, dynamic> radio) {
     return Column(
