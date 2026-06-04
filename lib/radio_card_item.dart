@@ -6,6 +6,7 @@ class RadioCardItem extends StatelessWidget {
   final int index;
   final List<dynamic> allRadios;
   final Function(List<dynamic> radios, int index, String categoryTitle) onRadioTap;
+  final String categoryTitle; // Novo parâmetro para o título da categoria
 
   const RadioCardItem({
     super.key,
@@ -13,6 +14,7 @@ class RadioCardItem extends StatelessWidget {
     required this.index,
     required this.allRadios,
     required this.onRadioTap,
+    required this.categoryTitle,
   });
   
   @override
@@ -24,7 +26,7 @@ class RadioCardItem extends StatelessWidget {
 
     return GestureDetector(      
     // Agora passamos a lista completa e o índice do clique
-    onTap: () => onRadioTap(allRadios, index, "Search Results"), // Você pode personalizar o título da categoria conforme necessário
+    onTap: () => onRadioTap(allRadios, index, categoryTitle), // Você pode personalizar o título da categoria conforme necessário
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

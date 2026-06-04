@@ -191,7 +191,7 @@ class _SearchTabState extends State<SearchTab> {
                             ),
                             itemCount: _searchResults.length,
                             itemBuilder: (context, index) {
-                              return RadioCardItem(radio: _searchResults[index], index: index, allRadios: _searchResults, onRadioTap: widget.onPlayRadio);
+                              return RadioCardItem(radio: _searchResults[index], index: index, allRadios: _searchResults, onRadioTap: widget.onPlayRadio, categoryTitle: "Search Results");
                             },
                           ),
           ),

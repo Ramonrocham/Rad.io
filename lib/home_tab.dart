@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:radio/radio_card_item.dart';
-import 'SpecificSearchScreen.dart';
+import 'specific_search_screen.dart';
 
 class HomeTab extends StatelessWidget {
   final List<dynamic> radiosRecomendados;
@@ -191,7 +191,8 @@ Widget _buildSectionTitle(String title) {
             radio: radio, 
             index: index, 
             allRadios: radios, 
-            onRadioTap: (list, idx, title) => playRadio(list, idx, title), // Passa o título da seção para o playRadio
+            onRadioTap: (list, idx, title) => playRadio(list, idx, title),
+            categoryTitle: sectionTitle, // Passa o título da seção para o playRadio
           ),
         );
       },

@@ -55,7 +55,7 @@ class SpecificSearchScreen extends StatelessWidget {
                     itemCount: radios.length,
                     itemBuilder: (context, index) {
                       final radio = radios[index];
-                      return RadioCardItem(radio: radio, index: index, allRadios: radios, onRadioTap: onRadioTap); // Garante que este método retorne um Widget
+                      return RadioCardItem(radio: radio, index: index, allRadios: radios, onRadioTap: onRadioTap, categoryTitle: title); // Garante que este método retorne um Widget
                     },
                   );
                 },

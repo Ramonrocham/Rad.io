@@ -13,7 +13,7 @@ class PlayerScreen extends StatelessWidget {
   final VoidCallback onPrevious; // Função para voltar rádio
 
   final ValueNotifier<bool> isFavoriteNotifier = ValueNotifier(false);
-  int currentIndex;
+  final ValueNotifier<int> currentIndexNotifier;
 
   PlayerScreen({
     super.key, 
@@ -22,8 +22,8 @@ class PlayerScreen extends StatelessWidget {
     required this.player,
     required this.onNext,
     required this.onPrevious,
-    required this.currentIndex,
-  });
+    required int currentIndex,
+  }): currentIndexNotifier = ValueNotifier(currentIndex);
 
   void _updateFavoriteStatus(String uuid) async {
     bool fav = await RadioDatabaseService.isFavorite(uuid);
@@ -100,13 +100,13 @@ class PlayerScreen extends StatelessWidget {
               // Se a URL falhar, ele desenha o ícone no lugar da imagem quebrada.
               errorBuilder: (context, error, stackTrace) {
                 return Center(
-                  child: DiscoIcon(index: currentIndex, height: 200, width: 200), // Você pode ajustar o tamanho do ícone conforme necessário
+                  child: DiscoIcon(index: currentIndexNotifier.value, height: 200, width: 200), // Você pode ajustar o tamanho do ícone conforme necessário
                 );
               },
             )
           // O "else" do seu if inicial (!hasValidImage)
           : Center(
-              child: DiscoIcon(index: currentIndex, height: 200, width: 200),
+              child: DiscoIcon(index: currentIndexNotifier.value, height: 200, width: 200),
             ),
     );
   }
@@ -158,7 +158,7 @@ class PlayerScreen extends StatelessWidget {
         // Botão Anterior
         IconButton(
           icon: const Icon(Icons.skip_previous, size: 40, color: Colors.white),
-          onPressed: () => {onPrevious(), currentIndex--},
+          onPressed: () => {onPrevious(), currentIndexNotifier.value--},
         ),
         // Botão Central de Play/Pause dinâmico
         GestureDetector(
@@ -179,7 +179,7 @@ class PlayerScreen extends StatelessWidget {
         // Botão Próximo
         IconButton(
           icon: const Icon(Icons.skip_next, size: 40, color: Colors.white),
-          onPressed: () => {onNext(), currentIndex++}, // Passa o índice atual para a função
+          onPressed: () => {onNext(), currentIndexNotifier.value++}, // Passa o índice atual para a função
         ),
         ValueListenableBuilder<bool>(
         valueListenable: isFavoriteNotifier,
