@@ -87,7 +87,7 @@ class PlayerScreen extends StatelessWidget {
       height: MediaQuery.of(context).size.width * 0.8,
       decoration: BoxDecoration(
         color: const Color(0xFF5D4E2E), 
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(color: Colors.black.withValues(alpha: 0.5), blurRadius: 20, offset: const Offset(0, 10))
         ],
@@ -100,13 +100,13 @@ class PlayerScreen extends StatelessWidget {
               // Se a URL falhar, ele desenha o ícone no lugar da imagem quebrada.
               errorBuilder: (context, error, stackTrace) {
                 return Center(
-                  child: DiscoIcon(index: currentIndexNotifier.value, height: 200, width: 200), // Você pode ajustar o tamanho do ícone conforme necessário
+                  child: DiscoIcon(index: currentIndexNotifier.value, height: 210, width: 210), // Você pode ajustar o tamanho do ícone conforme necessário
                 );
               },
             )
           // O "else" do seu if inicial (!hasValidImage)
           : Center(
-              child: DiscoIcon(index: currentIndexNotifier.value, height: 200, width: 200),
+              child: DiscoIcon(index: currentIndexNotifier.value, height: 210, width: 210),
             ),
     );
   }
