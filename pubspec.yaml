@@ -45,6 +45,7 @@ dependencies:
   text_scroll: ^0.2.1
   sqflite_common_ffi: ^2.4.0+3
   qr_flutter: ^4.1.0
+  mobile_scanner: ^7.2.0
 
 dev_dependencies:
   flutter_test:

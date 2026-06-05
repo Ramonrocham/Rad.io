@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:radio/radio_card_item.dart';
 import 'radio_api_service.dart';
+import 'qr_scanner_screen.dart';
+import 'dart:convert';
 
 class SearchTab extends StatefulWidget {
   final Function(List<dynamic> radios, int index, String categoryTitle) onPlayRadio;
@@ -59,12 +61,12 @@ class _SearchTabState extends State<SearchTab> {
 
     // Lógica enxuta de montagem da URL
     if (_selectedFilter == 'Id') {
-      endpoint = 'byuuid/$encodedQuery';
+      endpoint = 'byuuid?uuids=$encodedQuery';
     } else {
       endpoint = 'search?$apiFilterParam=$encodedQuery&order=$apiOrderParam';
     }
 
-    if (_isDescending) {
+    if (_isDescending || _selectedFilter != 'Id') {
         endpoint += '&reverse=true';
       }
 
@@ -109,6 +111,7 @@ class _SearchTabState extends State<SearchTab> {
               IconButton(
                 icon: const Icon(Icons.qr_code_scanner, color: Color(0xFFFF6B00), size: 32),
                 onPressed: () {
+                  _scanQRCode();
                   // TODO: Chamar a função do leitor de QR Code
                 },
               ),
@@ -288,4 +291,44 @@ class _SearchTabState extends State<SearchTab> {
       ),
     );
   }
+
+  Future<void> _scanQRCode() async {
+  // 1. Abre a câmera e espera o usuário ler algo
+  final scannedData = await Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => const QRScannerScreen()),
+  );
+
+  // 2. Se o usuário leu um código e não cancelou a tela
+  if (scannedData != null && scannedData is String) {
+    try {
+      // 3. Tenta transformar o texto do QR Code no Map original
+      final Map<String, dynamic> data = jsonDecode(scannedData);
+
+      // 4. Verifica se é um QR Code gerado pelo nosso app (por segurança)
+      if (data['type'] == 'radio_station' && data['uuid'] != null) {
+        
+        setState(() {
+          // Muda visualmente o filtro para "Id"
+          _selectedFilter = 'Id'; 
+          // Preenche o campo de texto com o UUID para o usuário ver
+          _searchController.text = data['uuid']; 
+        });
+        
+        // 5. Aciona a busca exatamente como se o usuário tivesse apertado Enter!
+        _performSearch();
+        
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('QR Code não reconhecido por este aplicativo.')),
+        );
+      }
+    } catch (e) {
+      // Se der erro no jsonDecode, significa que ele leu um cardápio de restaurante, etc.
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('QR Code inválido.')),
+      );
+    }
+  }
+}
 }

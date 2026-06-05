@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:flutter/services.dart';
 
 class RadioShareButton extends StatelessWidget {
   final Map<String, dynamic> radio;
@@ -73,6 +74,52 @@ class RadioShareButton extends StatelessWidget {
               radio['name']?.toString().trim() ?? 'Rádio Desconhecida',
               textAlign: TextAlign.center,
               style: const TextStyle(color: Colors.white, fontSize: 16),
+            ),
+            const SizedBox(height: 8),
+            GestureDetector(
+              onTap: () async {
+                // Copia para a área de transferência
+                await Clipboard.setData(ClipboardData(text: radio['stationuuid'].toString().trim()));
+                
+                // Ignora o aviso do linter se o contexto não estiver montado
+                if (!context.mounted) return;
+                
+                // Feedback visual para o usuário
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('ID copiado para a área de transferência!'),
+                    backgroundColor: Color(0xFF282828),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF282828), // Fundo cinza escuro para destacar sutilmente
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.white24),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.copy, color: Color(0xFFFF6B00), size: 16), // Ícone copiar
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        radio['stationuuid']?.toString().trim() ?? 'UUID Desconhecido',
+                        style: const TextStyle(
+                          color: Colors.white70, 
+                          fontSize: 12, 
+                          fontFamily: 'monospace', // Dá um ar de "código"
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
             const SizedBox(height: 8),
             const Text(
