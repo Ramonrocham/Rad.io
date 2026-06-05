@@ -280,20 +280,30 @@ class PlayerScreen extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Padding(
-          padding: EdgeInsets.symmetric(horizontal: 6),
+  padding: const EdgeInsets.symmetric(horizontal: 6),
+  child: Row(
+    children: [
+      // 1. Bitrate fica fixo e imune a esmagamento
+      Text('bitrate: $bitrate', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+      
+      const SizedBox(width: 66), // Espaçamento de segurança
+      
+      // 2. Carrossel das Tags (Ocupa apenas o resto da tela)
+      Expanded(
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          reverse: true, // A MÁGICA: Empurra o texto para a direita!
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('bitrate: $bitrate', style: TextStyle(color: Colors.grey, fontSize: 12)),
-              Row(
-                children: [
-                  Text('Tags: ', style: TextStyle(color: Color(0xFFFF6B00), fontSize: 12, fontWeight: FontWeight.bold)),
-                  Text(displayTags, style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.w500))
-                ],
-              ),
+              const Text('Tags: ', style: TextStyle(color: Color(0xFFFF6B00), fontSize: 12, fontWeight: FontWeight.bold)),
+              Text(displayTags, style: const TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.w500)),
             ],
           ),
         ),
+      ),
+    ],
+  ),
+),
       ],
     );
   }
