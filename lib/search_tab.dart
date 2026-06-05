@@ -3,6 +3,8 @@ import 'package:radio/radio_card_item.dart';
 import 'radio_api_service.dart';
 import 'qr_scanner_screen.dart';
 import 'dart:convert';
+import 'location_service.dart';
+import 'package:geolocator/geolocator.dart';
 
 class SearchTab extends StatefulWidget {
   final Function(List<dynamic> radios, int index, String categoryTitle) onPlayRadio;
@@ -112,35 +114,46 @@ class _SearchTabState extends State<SearchTab> {
                 icon: const Icon(Icons.qr_code_scanner, color: Color(0xFFFF6B00), size: 32),
                 onPressed: () {
                   _scanQRCode();
-                  // TODO: Chamar a função do leitor de QR Code
                 },
               ),
             ],
           ),
           
-          const SizedBox(height: 20),
+          const SizedBox(height: 20),              
 
           // 2. Campo de Busca
+          
           Container(
-            height: 50,
-            decoration: BoxDecoration(
-              color: const Color(0xFF5D4E2E), 
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: TextField(
-              controller: _searchController,
-              style: const TextStyle(color: Colors.white),
-              onSubmitted: (_) => _performSearch(), 
-              decoration: InputDecoration(
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
-                suffixIcon: GestureDetector(
-                  onTap: _performSearch, 
-                  child: const Icon(Icons.search, color: Color(0xFFFF6B00)),
-                ),
-              ),
-            ),
-          ),
+  height: 50,
+  decoration: BoxDecoration(
+    color: const Color(0xFF5D4E2E), 
+    borderRadius: BorderRadius.circular(4),
+  ),
+  child: TextField(
+    controller: _searchController,
+    style: const TextStyle(color: Colors.white),
+    onSubmitted: (_) => _performSearch(), 
+    decoration: InputDecoration(
+      border: InputBorder.none,
+      contentPadding: const EdgeInsets.symmetric(vertical: 15),
+      
+      // 1. ESQUERDA (prefixIcon): Botão de GPS
+      prefixIcon: GestureDetector(
+        onTap: _searchByLocation, 
+        child: const Icon(Icons.location_pin, color: Color(0xFFFF6B00)),
+      ),
+      
+      // 2. DIREITA (suffixIcon): Lupa de pesquisa
+      suffixIcon: GestureDetector(
+        onTap: _performSearch, 
+        child: const Icon(Icons.search, color: Color(0xFFFF6B00)),
+      ),
+      
+      hintText: 'Pesquisar...',
+      hintStyle: const TextStyle(color: Colors.white54),
+    ),
+  ),
+),
           
           const SizedBox(height: 20),
 
@@ -331,4 +344,91 @@ class _SearchTabState extends State<SearchTab> {
     }
   }
 }
+
+Future<int?> _showDistanceDialog() async {
+    TextEditingController distanceController = TextEditingController(text: '20'); // Padrão 20km
+
+    return showDialog<int>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF1E1E1E),
+          title: const Text('Raio de Busca', style: TextStyle(color: Colors.white)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Buscar rádios até qual distância? (em km)',
+                style: TextStyle(color: Colors.white70, fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: distanceController,
+                keyboardType: TextInputType.number,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: const Color(0xFF282828),
+                  suffixText: 'km',
+                  suffixStyle: const TextStyle(color: Color(0xFFFF6B00)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context), // Cancela
+              child: const Text('Cancelar', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF6B00)),
+              onPressed: () {
+                final int km = int.tryParse(distanceController.text) ?? 20;
+                // Multiplicamos por 1000 porque a API pede em metros (ex: 20km = 20000m)
+                Navigator.pop(context, km * 1000); 
+              },
+              child: const Text('Buscar', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+Future<void> _searchByLocation() async {
+    try {
+      // 1. Pede a coordenada para a nossa nova classe de serviço
+      Position position = await LocationService.getCurrentPosition();
+
+      // 2. Pede a distância pro usuário via Dialog (a função _showDistanceDialog continua igual)
+      int? distanceInMeters = await _showDistanceDialog();
+      if (distanceInMeters == null) return; 
+
+      setState(() {
+        _isLoading = true;
+        _hasSearched = true;
+        _searchResults = [];
+        _searchController.clear();
+      });
+
+      // 3. Monta e dispara a requisição
+      String endpoint = 'search?geo_lat=${position.latitude}&geo_long=${position.longitude}&geo_distance=$distanceInMeters';
+      
+      final results = await RadioApiService().fetchRadios(endpoint);
+      
+      setState(() {
+        _searchResults = results;
+        _isLoading = false;
+      });
+      
+    } catch (error) {
+      // O erro lançado pelo Service cai aqui, e a tela só se preocupa em exibi-lo!
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.toString())));
+    }
+  }
 }
